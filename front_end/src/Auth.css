@@ -1,0 +1,142 @@
+/* Auth.css - shared styles for Login / Signup / Forgot Password */
+.auth-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 40px);
+  background: linear-gradient(180deg, #f5f8ff 0%, #f1f6f9 100%);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+}
+
+.auth-card {
+  width: 420px;
+  height:auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(27, 40, 68, 0.08);
+  padding: 28px;
+  box-sizing: border-box;
+  border: 1px solid #eef2f8;
+}
+
+.auth-header {
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.brand-dot {
+  width: 380px;
+  height: 36px;
+  border-radius: 9px;
+  justify-content: center;
+  text-justify:auto;
+  color:#3b82f6;
+  font-weight:bolder;
+  font-size:25px;
+  margin-bottom: 15px;
+}
+
+.auth-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  align-items:center;
+  justify-content:center;
+  margin-top: 20px;
+}
+
+.auth-desc {
+  font-size: 20px;
+  font-weight: bold;
+  color: black;
+  margin-bottom: 20px;
+  align-items:center;
+  justify-content:center;
+
+}
+
+/* forms */
+.form-row {
+  margin-bottom: 12px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #dbe7fb;
+  background: #ffffff;
+  box-sizing: border-box;
+  outline: none;
+  font-size: 14px;
+  color: #0f172a;
+  margin: 8px;
+}
+
+.input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.08);
+}
+
+.inline-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(90deg,#2563eb,#06b6d4);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.link-row {
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.small-link {
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.small-link:hover {
+  text-decoration: underline;
+}
+
+/* error and success */
+.msg {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.error {
+  color: #b91c1c;
+}
+
+.success {
+  color: #065f46;
+}
+
+/* responsive */
+@media (max-width: 480px) {
+  .auth-card { width: 100%; padding: 18px; border-radius: 10px; }
+}
