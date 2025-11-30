@@ -1,37 +1,35 @@
 import React, { useState, useEffect } from "react";
 import "./SafeShelterFinder.css";
-import { useNavigate } from "react-router-dom";
+import { Hospital } from "lucide-react";
 
-const SafeShelterFinder = () => {
+const SafeHospitalFinder = () => {
   const [location, setLocation] = useState("");
-  const [shelters, setShelters] = useState([]);
+  const [hospital, setHospital] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
-  const [allShelters, setAllShelters] = useState([]);
-  const navigate = useNavigate();
-  
+  const [allHospital, setAllHospital] = useState([]);
 
   // ⭐ Fetch shelters from backend (lat/lon included)
   useEffect(() => {
-    async function fetchShelters() {
+    async function fetchHospitals() {
       try {
-        const response = await fetch("http://localhost:5000/api/shelter-latlon");
+        const response = await fetch("http://localhost:5000/api/hospital-latlon");
         const data = await response.json();
         console.log(data);
-        const formatted = data.map(shelter => ({
-          id: shelter.osm_id,
-          osm_type: shelter.osm_type,
-          name: shelter.name,
-          lat: parseFloat(shelter.lat),
-          lon: parseFloat(shelter.lon)
+        const formatted = data.map(hospital => ({
+          id: hospital.osm_id,
+          osm_type: hospital.osm_type,
+          name: hospital.name,
+          lat: parseFloat(hospital.lat),
+          lon: parseFloat(hospital.lon)
         }));
 
-        setAllShelters(formatted);
+        setAllHospital(formatted);
       } catch (error) {
-        console.error("Error loading shelters:", error);
+        console.error("Error loading hospital:", error);
       }
     }
 
-    fetchShelters();
+    fetchHospitals();
   }, []);
 
   // ⭐ Haversine distance function
@@ -80,13 +78,13 @@ const SafeShelterFinder = () => {
     setUserLocation({ lat: userLat, lon: userLon });
 
     // 2️⃣ Compute distance using DB lat/lon
-    const sheltersWithDistance = allShelters.map(s => ({
+    const hospitalsWithDistance = allHospital.map(s => ({
       ...s,
       distance: getDistance(userLat, userLon, s.lat, s.lon)
     }));
 
     // ⭐ 3️⃣ Filter only shelters within 3 km radius
-    const filtered = sheltersWithDistance
+    const filtered = hospitalsWithDistance
       .filter(s => s.distance <= 3)       // <= 3 km only
       .sort((a, b) => a.distance - b.distance);
 
@@ -95,7 +93,7 @@ const SafeShelterFinder = () => {
     }
 
     // 4️⃣ Set result
-    setShelters(filtered);
+    setHospital(filtered);
 
   } catch(err) {
     console.error(err);
@@ -106,8 +104,8 @@ const SafeShelterFinder = () => {
 
   return (
     <div className="shelter-container">
-      <h2>🏠 Safe Shelter Finder</h2>
-      <p>Find the nearest safe shelters in case of floods.</p>
+      <h2>🏠 Safe Hospitals Finder</h2>
+      <p>Find the nearest Hospitals  in case of floods.</p>
 
       <div className="search-box">
         <input
@@ -120,29 +118,24 @@ const SafeShelterFinder = () => {
       </div>
 
       <div className="shelter-list">
-        {shelters.length > 0 ? (
-           shelters
-            .filter(shelter => shelter.name && shelter.name.trim() !== "") // ✅ Filter out shelters without name
-            .map((shelter) => (
-            <div key={shelter.id} className="shelter-card">
-              <h3>{shelter.name}</h3>
+        {hospital.length > 0 ? (
+           hospital
+            .filter(hospital => hospital.name && hospital.name.trim() !== "") // ✅ Filter out shelters without name
+            .map((hospital) => (
+            <div key={hospital.id} className="shelter-card">
+              <h3>{hospital.name}</h3>
               <p>
-                <strong>Distance:</strong> {shelter.distance.toFixed(2)} km
+                <strong>Distance:</strong> {hospital.distance.toFixed(2)} km
               </p>
-              <button className="navigate-btn"  onClick={() => navigate("/route", {
-              state: {
-                userLocation,
-                shelter
-              }
-             })}>🚶 Navigate</button>
+              <button className="navigate-btn">🚶 Navigate</button>
             </div>
           ))
         ) : (
-          <p className="no-shelter">No shelters yet. Enter a location to search.</p>
+          <p className="no-shelter">No hospital yet. Enter a location to search.</p>
         )}
       </div>
     </div>
   );
 };
 
-export default SafeShelterFinder;
+export default SafeHospitalFinder;

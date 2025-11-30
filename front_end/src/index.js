@@ -6,6 +6,9 @@ import App from "./App";
 import Dashboard from "./Dashboard";
 import Maps from "./Maps";
 import SafeShelterFinder from "./SafeShelterFinder";
+import SafeHospitalFinder from "./SafeHospitalFinder";
+import SafeRouteFinder from "./SafeRouteFinder";
+import SafeRouteMap from "./SafeRouteMap";
 import StatisticsPanel from "./StatisticsPanel";
 import ChatbotPanel from "./ChatbotPanel";
 import Login from "./Login";  
@@ -29,6 +32,9 @@ root.render(
         {/* Dashboard Sub Routes */}
          <Route path="/maps" element={<Maps/>} />
          <Route path="/safeshelterfinder" element={<SafeShelterFinder/>} />
+         <Route path="/safehospitalfinder" element={<SafeHospitalFinder/>} />
+         <Route path="/safeRouteFinder" element={<SafeRouteFinder/>} />
+          <Route path="/route" element={<SafeRouteMap />} />
          <Route path="/statistics" element={<StatisticsPanel/>} />
           <Route path="/chatbotpanel" element={<ChatbotPanel/>} />
 

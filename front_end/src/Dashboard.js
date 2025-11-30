@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Map, Route, BarChart2, MessageSquare, LogOut, User } from "lucide-react";
 import "./dashboard.css";
 import Maps from "./Maps";
-import SafeShelterFinder from "./SafeShelterFinder";
+import SafeRouteFinder from "./SafeRouteFinder";
 import StatisticsPanel from "./StatisticsPanel";
 import ChatbotPanel from "./ChatbotPanel";
 
@@ -77,7 +77,7 @@ export default function Dashboard() {
         )}
         {activeTab === "routes" && (
           <div className="card">
-            <SafeShelterFinder />
+            <SafeRouteFinder />
           </div>
         )}
         {activeTab === "stats" && (
