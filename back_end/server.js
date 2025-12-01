@@ -5,6 +5,7 @@ const hospitalRoutes = require('./routes/hospitalR');
 const shelterRoutes = require('./routes/shelterR');
 const vulernabilityRoutes = require('./routes/vulernabilityR');
 const safePathRoutes = require('./routes/safepathR');
+const authRoutes = require('./routes/authR');
 //const geocodeRoutes = require('./routes/geocodeR');
 
 const app = express();
@@ -17,6 +18,7 @@ app.use('/api', hospitalRoutes);
 app.use('/api', shelterRoutes);
 app.use('/api', vulernabilityRoutes);
 app.use('/api', safePathRoutes);
+app.use('/api',authRoutes)
 
 
 const PORT = 5000;

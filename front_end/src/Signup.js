@@ -23,42 +23,25 @@ export default function Signup({ onSwitch }) {
 
   const validateEmail = (e) => /\S+@\S+\.\S+/.test(e);
 
-  const handleSignup = (e) => {
-    e.preventDefault();
-    setMsg(null);
+  const handleSignup = async (e) => {
+  e.preventDefault();
 
-    if (!name.trim() || !email.trim() || !password) {
-      setMsg({ type: "error", text: "Please fill all required fields." });
-      return;
-    }
-    if (!validateEmail(email)) {
-      setMsg({ type: "error", text: "Enter a valid email address." });
-      return;
-    }
-    if (password.length < 6) {
-      setMsg({ type: "error", text: "Password must be at least 6 characters." });
-      return;
-    }
-    if (password !== confirm) {
-      setMsg({ type: "error", text: "Passwords do not match." });
-      return;
-    }
+  const response = await fetch("http://localhost:5000/api/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password })
+  });
 
-    const users = getUsers();
-    if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-      setMsg({ type: "error", text: "Email already registered. Try logging in." });
-      return;
-    }
+  const data = await response.json();
 
-    users.push({ id: Date.now(), name, email: email.toLowerCase(), password });
-    saveUsers(users);
+  if (!response.ok) {
+    setMsg({ type: "error", text: data.error });
+    return;
+  }
 
-    setMsg({ type: "success", text: "Signup successful! You can now log in." });
-    // Optionally auto-switch to login after short delay
-    setTimeout(() => {
-      if (onSwitch) onSwitch("login");
-    }, 1000);
-  };
+  setMsg({ type: "success", text: data.message });
+  setTimeout(() => navigate("/login"), 1000);
+};
 
   return (
     <div className="auth-wrapper">
