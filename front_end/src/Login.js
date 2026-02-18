@@ -74,7 +74,7 @@ export default function Login({ onSwitch }) {
           </div>
 
           <div style={{ marginTop: 6 }}>
-            <a className="small-link" onClick={() => onSwitch && onSwitch("forgot")}>
+           <a className="small-link" onClick={() => navigate("/forgot")}>
               Forgot password?
             </a>
             <br />

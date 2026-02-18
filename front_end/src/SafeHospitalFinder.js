@@ -1,40 +1,41 @@
 import React, { useState, useEffect } from "react";
-import "./SafeShelterFinder.css";
-import { Hospital } from "lucide-react";
+import "./SafeShelterFinder.css";  // same CSS works
+import { useNavigate } from "react-router-dom";
 
 const SafeHospitalFinder = () => {
   const [location, setLocation] = useState("");
-  const [hospital, setHospital] = useState([]);
+  const [hospitals, setHospitals] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
-  const [allHospital, setAllHospital] = useState([]);
+  const [allHospitals, setAllHospitals] = useState([]);
+  const navigate = useNavigate();
 
-  // ⭐ Fetch shelters from backend (lat/lon included)
+  // ⭐ Fetch hospitals from backend
   useEffect(() => {
     async function fetchHospitals() {
       try {
         const response = await fetch("http://localhost:5000/api/hospital-latlon");
         const data = await response.json();
-        console.log(data);
-        const formatted = data.map(hospital => ({
-          id: hospital.osm_id,
-          osm_type: hospital.osm_type,
-          name: hospital.name,
-          lat: parseFloat(hospital.lat),
-          lon: parseFloat(hospital.lon)
+
+        const formatted = data.map(h => ({
+          id: h.osm_id,
+          osm_type: h.osm_type,
+          name: h.name,
+          lat: parseFloat(h.lat),
+          lon: parseFloat(h.lon)
         }));
 
-        setAllHospital(formatted);
+        setAllHospitals(formatted);
       } catch (error) {
-        console.error("Error loading hospital:", error);
+        console.error("Error loading hospitals:", error);
       }
     }
 
     fetchHospitals();
   }, []);
 
-  // ⭐ Haversine distance function
+  // ⭐ Haversine distance calculation
   function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // km
+    const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
 
@@ -47,65 +48,95 @@ const SafeHospitalFinder = () => {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  
-  
+  // ⭐ Enhanced geocoding function with fallback strategies
+  const geocodeLocation = async (query) => {
+    const baseUrl = "https://nominatim.openstreetmap.org/search";
+    const commonParams = "&format=json&limit=5&countrycodes=in&addressdetails=1";
+    const mumbaiBounds = "&viewbox=72.7764,19.2703,72.9781,18.8930&bounded=1";
+
+    // Try different search strategies
+    const strategies = [
+      // Strategy 1: Exact query with Mumbai bounds
+      `${baseUrl}?q=${encodeURIComponent(query + ", Mumbai, India")}${commonParams}${mumbaiBounds}`,
+
+      // Strategy 2: Exact query without strict bounds (nearby areas)
+      `${baseUrl}?q=${encodeURIComponent(query + ", Mumbai")}${commonParams}&viewbox=72.7764,19.2703,72.9781,18.8930`,
+
+      // Strategy 3: Simplified query (remove common words)
+      `${baseUrl}?q=${encodeURIComponent(
+        query.replace(/institute|college|university|school|hospital|of|the/gi, '').trim() + ", Mumbai"
+      )}${commonParams}${mumbaiBounds}`,
+    ];
+
+    for (const url of strategies) {
+      try {
+        const response = await fetch(url, {
+          headers: { "User-Agent": "SafeHospital-App" },
+        });
+        const data = await response.json();
+
+        if (data && data.length > 0) {
+          return data[0]; // Return first match from successful strategy
+        }
+      } catch (err) {
+        continue; // Try next strategy
+      }
+    }
+
+    return null; // No results from any strategy
+  };
+
+  // ⭐ Search hospital
   const handleSearch = async () => {
-  if (location.trim() === "") {
-    alert("Enter your location!");
-    return;
-  }
-
-  try {
-    // 1️⃣ Convert user input → coordinates
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-      location
-    )}&format=json&limit=1`;
-
-    const response = await fetch(url, {
-      headers: { "User-Agent": "SafeShelter-App" },
-    });
-
-    const data = await response.json();
-
-    if (data.length === 0) {
-      alert("Location not found!");
+    if (location.trim() === "") {
+      alert("Enter your location!");
       return;
     }
 
-    const userLat = parseFloat(data[0].lat);
-    const userLon = parseFloat(data[0].lon);
+    try {
+      // 1️⃣ Convert address → lat/lon with smart geocoding
+      const result = await geocodeLocation(location);
 
-    setUserLocation({ lat: userLat, lon: userLon });
+      if (!result) {
+        alert(`Location "${location}" not found in Mumbai!\n\nTips:\n✓ Try shorter names: "Don Bosco Kurla" instead of full name\n✓ Use area names: "Kurla", "Bandra", "Andheri"\n✓ Add landmarks: "Kurla Station", "Bandra East"\n✓ Check spelling`);
+        return;
+      }
 
-    // 2️⃣ Compute distance using DB lat/lon
-    const hospitalsWithDistance = allHospital.map(s => ({
-      ...s,
-      distance: getDistance(userLat, userLon, s.lat, s.lon)
-    }));
+      const userLat = parseFloat(result.lat);
+      const userLon = parseFloat(result.lon);
 
-    // ⭐ 3️⃣ Filter only shelters within 3 km radius
-    const filtered = hospitalsWithDistance
-      .filter(s => s.distance <= 3)       // <= 3 km only
-      .sort((a, b) => a.distance - b.distance);
+      // Show found location name for confirmation
+      console.log("📍 Found location:", result.display_name);
 
-    if (filtered.length === 0) {
-      alert("No shelters found within 3 km!");
+      setUserLocation({ lat: userLat, lon: userLon });
+
+      // 2️⃣ Add distance
+      const hospitalsWithDistance = allHospitals.map(h => ({
+        ...h,
+        distance: getDistance(userLat, userLon, h.lat, h.lon)
+      }));
+
+      // ⭐ 3️⃣ Filter hospitals within 4 km (hospital distance usually larger)
+      const filtered = hospitalsWithDistance
+        .filter(h => h.distance <= 4)
+        .sort((a, b) => a.distance - b.distance);
+
+      if (filtered.length === 0) {
+        alert("No nearby hospitals found within 4 km!");
+      }
+
+      setHospitals(filtered);
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to fetch coordinates");
     }
-
-    // 4️⃣ Set result
-    setHospital(filtered);
-
-  } catch(err) {
-    console.error(err);
-    alert("Failed to fetch coordinates");
-  }
-};
-
+  };
 
   return (
     <div className="shelter-container">
-      <h2>🏠 Safe Hospitals Finder</h2>
-      <p>Find the nearest Hospitals  in case of floods.</p>
+      <h2>🏥 Safe Hospital Finder</h2>
+      <p>Find the nearest hospitals quickly during emergencies.</p>
 
       <div className="search-box">
         <input
@@ -118,20 +149,32 @@ const SafeHospitalFinder = () => {
       </div>
 
       <div className="shelter-list">
-        {hospital.length > 0 ? (
-           hospital
-            .filter(hospital => hospital.name && hospital.name.trim() !== "") // ✅ Filter out shelters without name
+        {hospitals.length > 0 ? (
+          hospitals
+            .filter(h => h.name && h.name.trim() !== "")
             .map((hospital) => (
-            <div key={hospital.id} className="shelter-card">
-              <h3>{hospital.name}</h3>
-              <p>
-                <strong>Distance:</strong> {hospital.distance.toFixed(2)} km
-              </p>
-              <button className="navigate-btn">🚶 Navigate</button>
-            </div>
-          ))
+              <div key={hospital.id} className="shelter-card">
+                <h3>{hospital.name}</h3>
+                <p>
+                  <strong>Distance:</strong> {hospital.distance.toFixed(2)} km
+                </p>
+                <button
+                  className="navigate-btn"
+                  onClick={() =>
+                    navigate("/route", {
+                      state: {
+                        userLocation,
+                        shelter: hospital, // same variable name used in your Route page
+                      },
+                    })
+                  }
+                >
+                  🚑 Navigate
+                </button>
+              </div>
+            ))
         ) : (
-          <p className="no-shelter">No hospital yet. Enter a location to search.</p>
+          <p className="no-shelter">No hospitals yet. Enter a location to search.</p>
         )}
       </div>
     </div>

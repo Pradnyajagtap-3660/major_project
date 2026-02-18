@@ -140,8 +140,8 @@ export default function Dashboard() {
       ]
     },
 
-    { id: "stats", label: "Statistics & Analytics", icon: <BarChart2 className="w-5 h-5" /> },
-    { id: "chatbot", label: "Chatbot Panel", icon: <MessageSquare className="w-5 h-5" /> },
+    // { id: "stats", label: "Statistics & Analytics", icon: <BarChart2 className="w-5 h-5" /> },
+    // { id: "chatbot", label: "Chatbot Panel", icon: <MessageSquare className="w-5 h-5" /> },
   ];
 
   const handleLogout = () => {
@@ -250,7 +250,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {activeTab === "stats" && (
+        {/* {activeTab === "stats" && (
           <div className="card">
             <StatisticsPanel />
           </div>
@@ -260,7 +260,7 @@ export default function Dashboard() {
           <div className="card">
             <ChatbotPanel />
           </div>
-        )}
+        )} */}
 
       </main>
     </div>

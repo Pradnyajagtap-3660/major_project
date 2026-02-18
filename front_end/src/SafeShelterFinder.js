@@ -51,6 +51,44 @@ const SafeShelterFinder = () => {
 
   
   
+  // ⭐ Enhanced geocoding function with fallback strategies
+  const geocodeLocation = async (query) => {
+    const baseUrl = "https://nominatim.openstreetmap.org/search";
+    const commonParams = "&format=json&limit=5&countrycodes=in&addressdetails=1";
+    const mumbaiBounds = "&viewbox=72.7764,19.2703,72.9781,18.8930&bounded=1";
+
+    // Try different search strategies
+    const strategies = [
+      // Strategy 1: Exact query with Mumbai bounds
+      `${baseUrl}?q=${encodeURIComponent(query + ", Mumbai, India")}${commonParams}${mumbaiBounds}`,
+
+      // Strategy 2: Exact query without strict bounds (nearby areas)
+      `${baseUrl}?q=${encodeURIComponent(query + ", Mumbai")}${commonParams}&viewbox=72.7764,19.2703,72.9781,18.8930`,
+
+      // Strategy 3: Simplified query (remove common words)
+      `${baseUrl}?q=${encodeURIComponent(
+        query.replace(/institute|college|university|school|hospital|of|the/gi, '').trim() + ", Mumbai"
+      )}${commonParams}${mumbaiBounds}`,
+    ];
+
+    for (const url of strategies) {
+      try {
+        const response = await fetch(url, {
+          headers: { "User-Agent": "SafeShelter-App" },
+        });
+        const data = await response.json();
+
+        if (data && data.length > 0) {
+          return data[0]; // Return first match from successful strategy
+        }
+      } catch (err) {
+        continue; // Try next strategy
+      }
+    }
+
+    return null; // No results from any strategy
+  };
+
   const handleSearch = async () => {
   if (location.trim() === "") {
     alert("Enter your location!");
@@ -58,24 +96,19 @@ const SafeShelterFinder = () => {
   }
 
   try {
-    // 1️⃣ Convert user input → coordinates
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-      location
-    )}&format=json&limit=1`;
+    // 1️⃣ Convert user input → coordinates with smart geocoding
+    const result = await geocodeLocation(location);
 
-    const response = await fetch(url, {
-      headers: { "User-Agent": "SafeShelter-App" },
-    });
-
-    const data = await response.json();
-
-    if (data.length === 0) {
-      alert("Location not found!");
+    if (!result) {
+      alert(`Location "${location}" not found in Mumbai!\n\nTips:\n✓ Try shorter names: "Don Bosco Kurla" instead of full name\n✓ Use area names: "Kurla", "Bandra", "Andheri"\n✓ Add landmarks: "Kurla Station", "Bandra East"\n✓ Check spelling`);
       return;
     }
 
-    const userLat = parseFloat(data[0].lat);
-    const userLon = parseFloat(data[0].lon);
+    const userLat = parseFloat(result.lat);
+    const userLon = parseFloat(result.lon);
+
+    // Show found location name for confirmation
+    console.log("📍 Found location:", result.display_name);
 
     setUserLocation({ lat: userLat, lon: userLon });
 
