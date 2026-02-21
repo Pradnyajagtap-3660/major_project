@@ -7,6 +7,7 @@ const vulernabilityRoutes = require('./routes/vulernabilityR');
 const safePathRoutes = require('./routes/safepathR');
 const authRoutes = require('./routes/authR');
 const forgotPasswordRoutes = require('./routes/fpR');
+const chatbotRoutes = require('./routes/chatbotR');
 //const geocodeRoutes = require('./routes/geocodeR');
 
 const app = express();
@@ -21,6 +22,7 @@ app.use('/api', vulernabilityRoutes);
 app.use('/api', safePathRoutes);
 app.use('/api',authRoutes)
 app.use('/api', forgotPasswordRoutes);
+app.use('/api', chatbotRoutes);
 
 const PORT = 5000;
 const server = app.listen(PORT, () => {
