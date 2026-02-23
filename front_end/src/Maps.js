@@ -124,10 +124,10 @@
 //   useEffect(() => {
 //     const fetchData = async () => {
 //       try {
-//        // const floodRes = await axios.get("http://localhost:5000/api/flood-risk");
-//         const hospRes = await axios.get("http://localhost:5000/api/hospitals");
-//         const shelterRes = await axios.get("http://localhost:5000/api/shelters");
-//         const vulernableRes = await axios.get("http://localhost:5000/api/vulernable_zone");
+//        // const floodRes = await axios.get("http://localhost:5001/api/flood-risk");
+//         const hospRes = await axios.get("http://localhost:5001/api/hospitals");
+//         const shelterRes = await axios.get("http://localhost:5001/api/shelters");
+//         const vulernableRes = await axios.get("http://localhost:5001/api/vulernable_zone");
 
 //         setVulernableData(vulernableRes.data);
 
@@ -272,11 +272,11 @@
 //   useEffect(() => {
 //     const fetchData = async () => {
 //       try {
-//         // const floodRes = await axios.get("http://localhost:5000/api/flood-risk");
-//         const hospRes = await axios.get("http://localhost:5000/api/hospitals");
-//         const shelterRes = await axios.get("http://localhost:5000/api/shelters");
+//         // const floodRes = await axios.get("http://localhost:5001/api/flood-risk");
+//         const hospRes = await axios.get("http://localhost:5001/api/hospitals");
+//         const shelterRes = await axios.get("http://localhost:5001/api/shelters");
 //         const vulnerableRes = await axios.get(
-//           "http://localhost:5000/api/vulernable_zone"
+//           "http://localhost:5001/api/vulernable_zone"
 //         );
 
 //         console.log(setVulnerableData(vulnerableRes.data));
@@ -455,10 +455,10 @@
 //   useEffect(() => {
 //     const fetchData = async () => {
 //       try {
-//         const hospRes = await axios.get("http://localhost:5000/api/hospitals");
-//         const shelterRes = await axios.get("http://localhost:5000/api/shelters");
+//         const hospRes = await axios.get("http://localhost:5001/api/hospitals");
+//         const shelterRes = await axios.get("http://localhost:5001/api/shelters");
 //         const vulnerableRes = await axios.get(
-//           "http://localhost:5000/api/vulernable_zone"
+//           "http://localhost:5001/api/vulernable_zone"
 //         );
 
 //         console.log("✅ Vulnerable Zones:", vulnerableRes.data[0]);
@@ -649,6 +649,19 @@ const shelterIcon = new L.Icon({
   iconSize: [28, 28],
 });
 
+const parseGeometry = (geometry) => {
+  if (!geometry) return null;
+  if (typeof geometry === "string") {
+    try {
+      return JSON.parse(geometry);
+    } catch {
+      return null;
+    }
+  }
+  if (typeof geometry === "object") return geometry;
+  return null;
+};
+
 const Maps = () => {
   const [hospitalData, setHospitalData] = useState([]);
   const [shelterData, setShelterData] = useState([]);
@@ -659,8 +672,8 @@ const Maps = () => {
   useEffect(() => {
     const fetchStaticData = async () => {
       try {
-        const hospRes = await axios.get("http://localhost:5000/api/hospitals");
-        const shelterRes = await axios.get("http://localhost:5000/api/shelters");
+        const hospRes = await axios.get("http://localhost:5001/api/hospitals");
+        const shelterRes = await axios.get("http://localhost:5001/api/shelters");
         setHospitalData(hospRes.data);
         setShelterData(shelterRes.data);
       } catch (err) {
@@ -682,7 +695,7 @@ const Maps = () => {
 
         try {
           const res = await axios.get(
-            `http://localhost:5000/api/vulernable_zone?minLng=${minLng}&minLat=${minLat}&maxLng=${maxLng}&maxLat=${maxLat}`
+            `http://localhost:5001/api/vulernable_zone?minLng=${minLng}&minLat=${minLat}&maxLng=${maxLng}&maxLat=${maxLat}`
           );
 
           setVulnerableData(res.data);
@@ -779,7 +792,8 @@ const Maps = () => {
   <LayerGroup>
     {vulnerableData.map((zone, i) => {
       try {
-        const geom = JSON.parse(zone.geometry);
+        const geom = parseGeometry(zone.geometry);
+        if (!geom) return null;
         let color = "#FF0000"; // Default: High
         if (zone.Vul_Class === "Medium") color = "#FFA500";
         else if (zone.Vul_Class === "Low") color = "#00FF00";
@@ -814,7 +828,8 @@ const Maps = () => {
     {vulnerableData
       .filter((zone) => zone.Vul_Class === "High")
       .map((zone, i) => {
-        const geom = JSON.parse(zone.geometry);
+        const geom = parseGeometry(zone.geometry);
+        if (!geom) return null;
         return (
           <GeoJSON
             key={`vuln-high-${zone.id || i}`}
@@ -841,7 +856,8 @@ const Maps = () => {
     {vulnerableData
       .filter((zone) => zone.Vul_Class === "Medium")
       .map((zone, i) => {
-        const geom = JSON.parse(zone.geometry);
+        const geom = parseGeometry(zone.geometry);
+        if (!geom) return null;
         return (
           <GeoJSON
             key={`vuln-medium-${zone.id || i}`}
@@ -868,7 +884,8 @@ const Maps = () => {
     {vulnerableData
       .filter((zone) => zone.Vul_Class === "Low")
       .map((zone, i) => {
-        const geom = JSON.parse(zone.geometry);
+        const geom = parseGeometry(zone.geometry);
+        if (!geom) return null;
         return (
           <GeoJSON
             key={`vuln-low-${zone.id || i}`}
@@ -894,7 +911,8 @@ const Maps = () => {
           <LayersControl.Overlay name="Hospitals">
             <LayerGroup>
               {hospitalData.map((hosp, i) => {
-                const geom = JSON.parse(hosp.geometry);
+                const geom = parseGeometry(hosp.geometry);
+                if (!geom?.coordinates) return null;
                 return (
                   <Marker
                     key={`hosp-${i}`}
@@ -912,7 +930,8 @@ const Maps = () => {
           <LayersControl.Overlay name="Shelters">
             <LayerGroup>
               {shelterData.map((shel, i) => {
-                const geom = JSON.parse(shel.geometry);
+                const geom = parseGeometry(shel.geometry);
+                if (!geom?.coordinates) return null;
                 return (
                   <Marker
                     key={`shel-${i}`}
@@ -972,8 +991,8 @@ export default Maps;  //working version with dynamic fetching of vulnerable zone
 //     const fetchStaticData = async () => {
 //       try {
 //         const [hospRes, shelterRes] = await Promise.all([
-//           axios.get("http://localhost:5000/api/hospitals"),
-//           axios.get("http://localhost:5000/api/shelters"),
+//           axios.get("http://localhost:5001/api/hospitals"),
+//           axios.get("http://localhost:5001/api/shelters"),
 //         ]);
 //         setHospitalData(hospRes.data);
 //         setShelterData(shelterRes.data);
@@ -991,7 +1010,7 @@ export default Maps;  //working version with dynamic fetching of vulnerable zone
 
 //     try {
 //       const res = await axios.get(
-//         `http://localhost:5000/api/vulernable_zone?minLng=${minLng}&minLat=${minLat}&maxLng=${maxLng}&maxLat=${maxLat}&offset=${offset}&limit=10000`
+//         `http://localhost:5001/api/vulernable_zone?minLng=${minLng}&minLat=${minLat}&maxLng=${maxLng}&maxLat=${maxLat}&offset=${offset}&limit=10000`
 //       );
 
 //       const newZones = res.data;
@@ -1124,5 +1143,4 @@ export default Maps;  //working version with dynamic fetching of vulnerable zone
 // };
 
 // export default Maps;  pagination working version
-
 

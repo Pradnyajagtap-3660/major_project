@@ -28,7 +28,7 @@ export default function SafeRouteMap() {
     async function fetchRoute() {
       try {
         console.log("🗺️ Requesting route from:", userLocation, "to:", shelter);
-        const response = await fetch("http://localhost:5000/api/safe-route", {
+        const response = await fetch("http://localhost:5001/api/safe-route", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -7,6 +7,7 @@ const vulernabilityRoutes = require('./routes/vulernabilityR');
 const safePathRoutes = require('./routes/safepathR');
 const authRoutes = require('./routes/authR');
 const forgotPasswordRoutes = require('./routes/fpR');
+const geocodeRoutes = require('./routes/geocodeR');
 //const geocodeRoutes = require('./routes/geocodeR');
 
 const app = express();
@@ -21,8 +22,9 @@ app.use('/api', vulernabilityRoutes);
 app.use('/api', safePathRoutes);
 app.use('/api',authRoutes)
 app.use('/api', forgotPasswordRoutes);
+app.use('/api', geocodeRoutes);
 
-const PORT = 5000;
+const PORT = 5001;
 const server = app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`🌐 Access at: http://localhost:${PORT}`);
@@ -33,7 +35,7 @@ const server = app.listen(PORT, () => {
 server.on('error', (error) => {
   if (error.code === 'EADDRINUSE') {
     console.error(`❌ Port ${PORT} is already in use!`);
-    console.log(`💡 Try: taskkill /F /IM node.exe`);
+    console.log(`💡 Try: killall node`);
   } else {
     console.error('❌ Server error:', error);
   }

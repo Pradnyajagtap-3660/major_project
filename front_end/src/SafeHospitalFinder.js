@@ -13,11 +13,11 @@ const SafeHospitalFinder = () => {
   useEffect(() => {
     async function fetchHospitals() {
       try {
-        const response = await fetch("http://localhost:5000/api/hospital-latlon");
+        const response = await fetch("http://localhost:5001/api/hospital-latlon");
         const data = await response.json();
 
         const formatted = data.map(h => ({
-          id: h.osm_id,
+          id: h.id ?? h.osm_id,
           osm_type: h.osm_type,
           name: h.name,
           lat: parseFloat(h.lat),
@@ -48,42 +48,17 @@ const SafeHospitalFinder = () => {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  // ⭐ Enhanced geocoding function with fallback strategies
+  // Backend proxy geocoding avoids browser-side Nominatim 425/429 errors.
   const geocodeLocation = async (query) => {
-    const baseUrl = "https://nominatim.openstreetmap.org/search";
-    const commonParams = "&format=json&limit=5&countrycodes=in&addressdetails=1";
-    const mumbaiBounds = "&viewbox=72.7764,19.2703,72.9781,18.8930&bounded=1";
-
-    // Try different search strategies
-    const strategies = [
-      // Strategy 1: Exact query with Mumbai bounds
-      `${baseUrl}?q=${encodeURIComponent(query + ", Mumbai, India")}${commonParams}${mumbaiBounds}`,
-
-      // Strategy 2: Exact query without strict bounds (nearby areas)
-      `${baseUrl}?q=${encodeURIComponent(query + ", Mumbai")}${commonParams}&viewbox=72.7764,19.2703,72.9781,18.8930`,
-
-      // Strategy 3: Simplified query (remove common words)
-      `${baseUrl}?q=${encodeURIComponent(
-        query.replace(/institute|college|university|school|hospital|of|the/gi, '').trim() + ", Mumbai"
-      )}${commonParams}${mumbaiBounds}`,
-    ];
-
-    for (const url of strategies) {
-      try {
-        const response = await fetch(url, {
-          headers: { "User-Agent": "SafeHospital-App" },
-        });
-        const data = await response.json();
-
-        if (data && data.length > 0) {
-          return data[0]; // Return first match from successful strategy
-        }
-      } catch (err) {
-        continue; // Try next strategy
-      }
+    try {
+      const response = await fetch(
+        `http://localhost:5001/api/geocode?query=${encodeURIComponent(query)}`
+      );
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (err) {
+      return null;
     }
-
-    return null; // No results from any strategy
   };
 
   // ⭐ Search hospital
