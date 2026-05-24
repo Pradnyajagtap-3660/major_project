@@ -1,3 +1,37 @@
+const fs = require('fs');
+const path = require('path');
+
+function loadEnvFromFile() {
+  const envPath = path.join(__dirname, '.env');
+  if (!fs.existsSync(envPath)) return;
+
+  const content = fs.readFileSync(envPath, 'utf8');
+  const lines = content.split(/\r?\n/);
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+
+    const eqIndex = line.indexOf('=');
+    if (eqIndex <= 0) continue;
+
+    const key = line.slice(0, eqIndex).trim();
+    if (!key || process.env[key] !== undefined) continue;
+
+    let value = line.slice(eqIndex + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[key] = value;
+  }
+}
+
+loadEnvFromFile();
+
 const express = require('express');
 const cors = require('cors');
 const floodRoutes = require('./routes/floodR');
@@ -8,11 +42,7 @@ const safePathRoutes = require('./routes/safepathR');
 const authRoutes = require('./routes/authR');
 const forgotPasswordRoutes = require('./routes/fpR');
 const chatbotRoutes = require('./routes/chatbotR');
-// const geocodeRoutes = require('./routes/geocodeR');
-// =======
-// const chatbotRoutes = require('./routes/chatbotR');
-// >>>>>>> b3742f7592444e4ae1377008b51fea87783bad2b
-//const geocodeRoutes = require('./routes/geocodeR');
+const geocodeRoutes = require('./routes/geocodeR');
 
 const app = express();
 app.use(cors());
@@ -24,12 +54,10 @@ app.use('/api', hospitalRoutes);
 app.use('/api', shelterRoutes);
 app.use('/api', vulernabilityRoutes);
 app.use('/api', safePathRoutes);
-app.use('/api',authRoutes)
+app.use('/api', authRoutes);
 app.use('/api', forgotPasswordRoutes);
-
-
 app.use('/api', chatbotRoutes);
-// app.use('/api', geocodeRoutes);
+app.use('/api', geocodeRoutes);
 
 
 const PORT = 5001;

@@ -87,7 +87,9 @@ exports.geocode = async (req, res) => {
     const strategies = [
       `${baseUrl}?q=${encodeURIComponent(`${query}, Mumbai, India`)}${commonParams}${mumbaiBounds}`,
       `${baseUrl}?q=${encodeURIComponent(`${query}, Mumbai`)}${commonParams}&viewbox=72.7764,19.2703,72.9781,18.8930`,
-      `${baseUrl}?q=${encodeURIComponent(`${simplified || query}, Mumbai`)}${commonParams}${mumbaiBounds}`
+      `${baseUrl}?q=${encodeURIComponent(`${simplified || query}, Mumbai`)}${commonParams}${mumbaiBounds}`,
+      `${baseUrl}?q=${encodeURIComponent(`${query}, Mumbai, India`)}${commonParams}`,
+      `${baseUrl}?q=${encodeURIComponent(`${query}, India`)}${commonParams}`
     ];
 
     let selected = null;

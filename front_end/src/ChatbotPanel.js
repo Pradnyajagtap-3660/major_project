@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import "./ChatbotPanel.css";
 
+const isRouteQuery = (text) =>
+  /how do i get to|how to get to|how to reach|directions to|navigate to|take me to|route to|way to|i want to go|get me to/i.test(text);
+
 function ChatbotPanel() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     {
       sender: "bot",
@@ -10,6 +15,7 @@ function ChatbotPanel() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [location, setLocation] = useState(null);
   const bottomRef = useRef(null);
 
   // Auto-scroll to latest message
@@ -17,23 +23,81 @@ function ChatbotPanel() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Capture browser location for location-aware flood guidance
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocation({
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+        });
+      },
+      () => {
+        setLocation(null);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }, []);
+
+  const requestLocation = () =>
+    new Promise((resolve) => {
+      if (!navigator.geolocation) { resolve(null); return; }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const loc = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+          setLocation(loc);
+          resolve(loc);
+        },
+        () => resolve(null),
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    });
+
+  const needsLocation = (text) =>
+    /nearest|closest|near me|nearby|shelter|hospital|route|direction|navigate|how (far|do i get|to get|to reach)/i.test(text);
+
   const handleSend = async () => {
     const text = input.trim();
     if (!text || loading) return;
 
-    // Show user message immediately
     setMessages((prev) => [...prev, { sender: "user", text }]);
     setInput("");
     setLoading(true);
 
+    let currentLocation = location;
+
+    if (!currentLocation && needsLocation(text)) {
+      setMessages((prev) => [
+        ...prev,
+        { sender: "bot", text: "Requesting your location... please allow access in the browser popup." },
+      ]);
+      currentLocation = await requestLocation();
+      if (!currentLocation) {
+        setMessages((prev) => [
+          ...prev,
+          { sender: "bot", text: "Location access was denied. To enable it: click the lock icon in your browser's address bar → Site settings → Location → Allow, then try again." },
+        ]);
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
-      const response = await fetch("http://localhost:5000/api/chatbot", {
+      const response = await fetch("http://localhost:5001/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: text, location: currentLocation }),
       });
       const data = await response.json();
-      setMessages((prev) => [...prev, { sender: "bot", text: data.reply }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: data.reply,
+          routeLink: isRouteQuery(text) ? { destination: data.destination, userLocation: currentLocation } : null,
+        },
+      ]);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -79,7 +143,7 @@ function ChatbotPanel() {
         <span className="chatbot-avatar">🌊</span>
         <div>
           <div className="chatbot-title">Flood Safety Assistant</div>
-          <div className="chatbot-subtitle">Powered by real Mumbai flood data</div>
+          <div className="chatbot-subtitle">for Mumbai flood scenarios</div >
         </div>
       </div>
 
@@ -89,6 +153,23 @@ function ChatbotPanel() {
             {msg.sender === "bot" && <span className="chat-avatar">🤖</span>}
             <div className={`chat-bubble ${msg.sender}`}>
               {renderText(msg.text)}
+              {msg.routeLink && (
+                <button
+                  className="route-link-btn"
+                  onClick={() => {
+                    const { destination, userLocation } = msg.routeLink;
+                    if (destination && userLocation) {
+                      navigate("/route", {
+                        state: { userLocation, shelter: destination },
+                      });
+                    } else {
+                      navigate("/safeRouteFinder");
+                    }
+                  }}
+                >
+                  🗺️ Open Safe Route Finder
+                </button>
+              )}
             </div>
           </div>
         ))}

@@ -16,7 +16,6 @@ const SafeShelterFinder = () => {
       try {
         const response = await fetch("http://localhost:5001/api/shelter-latlon");
         const data = await response.json();
-        console.log(data);
         const formatted = data.map(shelter => ({
           id: shelter.osm_id,
           osm_type: shelter.osm_type,

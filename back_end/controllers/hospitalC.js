@@ -6,7 +6,7 @@ async function getHospitalNameExpr() {
      FROM information_schema.columns
      WHERE table_schema = 'public' AND table_name = 'hospital';`
   );
-  const names = new Set(cols.rows.map(r => r.column_name));
+  const names = new Set(cols.rows.map((r) => r.column_name));
 
   if (names.has('name')) return "NULLIF(name, '')";
   if (names.has('hospital')) return "NULLIF(hospital, '')";
@@ -26,20 +26,11 @@ exports.getHospitals = async (req, res) => {
       `SELECT
         id,
         ${nameExpr} AS name,
-        ST_X(geom) AS longitude,
-        ST_Y(geom) AS latitude
+        ST_AsGeoJSON(geom) AS geometry
       FROM hospital;`
     );
-    // Format as GeoJSON-like structure for compatibility
-    const formatted = result.rows.map(row => ({
-      id: row.id,
-      name: row.name,
-      geometry: {
-        type: 'Point',
-        coordinates: [row.longitude, row.latitude]
-      }
-    }));
-    res.json(formatted);
+
+    res.json(result.rows);
   } catch (err) {
     console.error(err);
     res.status(500).send('Error fetching hospital data');
@@ -50,7 +41,6 @@ exports.getHospitals = async (req, res) => {
 
 exports.getlatlon = async (req, res) => {
   try {
-    console.log("Fetching hospital latlon data");
     const preferredName = await getHospitalNameExpr();
     const nameExpr = preferredName
       ? `COALESCE(${preferredName}, NULLIF(amenity, ''), 'Hospital')`

@@ -667,6 +667,12 @@ const Maps = () => {
   const [shelterData, setShelterData] = useState([]);
   const [vulnerableData, setVulnerableData] = useState([]);
   const mapRef = useRef();
+  const zoneStyle = {
+    weight: 1.2,
+    opacity: 0.8,
+    fill: false,
+    fillOpacity: 0,
+  };
 
   // Fetch hospitals and shelters (small datasets)
   useEffect(() => {
@@ -718,7 +724,7 @@ const Maps = () => {
       >
         <TileLayer
           attribution='&copy; <a href="http://osm.org/">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
         {/* Dynamic data loader */}
@@ -788,7 +794,7 @@ const Maps = () => {
 
 
           {/* 🧭 VULNERABILITY ZONES LAYERS */}
-<LayersControl.Overlay checked name="All Vulnerable Zones">
+<LayersControl.Overlay name="All Vulnerable Zones">
   <LayerGroup>
     {vulnerableData.map((zone, i) => {
       try {
@@ -804,8 +810,7 @@ const Maps = () => {
             data={geom}
             style={{
               color,
-              weight: 1,
-              fillOpacity: 0.4,
+              ...zoneStyle,
             }}
           >
             <Popup>
@@ -836,8 +841,7 @@ const Maps = () => {
             data={geom}
             style={{
               color: "#FF0000",
-              weight: 1,
-              fillOpacity: 0.4,
+              ...zoneStyle,
             }}
           >
             <Popup>
@@ -864,8 +868,7 @@ const Maps = () => {
             data={geom}
             style={{
               color: "#FFA500",
-              weight: 1,
-              fillOpacity: 0.4,
+              ...zoneStyle,
             }}
           >
             <Popup>
@@ -892,8 +895,7 @@ const Maps = () => {
             data={geom}
             style={{
               color: "#00FF00",
-              weight: 1,
-              fillOpacity: 0.4,
+              ...zoneStyle,
             }}
           >
             <Popup>
@@ -1143,4 +1145,3 @@ export default Maps;  //working version with dynamic fetching of vulnerable zone
 // };
 
 // export default Maps;  pagination working version
-

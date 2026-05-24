@@ -97,7 +97,7 @@
 
 
 import { useState } from "react";
-import { Map, Route, BarChart2, MessageSquare, LogOut, User } from "lucide-react";
+import { Map, Route, BarChart2, MessageSquare, LogOut, Building2, Home } from "lucide-react";
 import "./dashboard.css";
 import { useEffect } from "react";
 import Maps from "./Maps";
@@ -109,9 +109,14 @@ import SafeHospitalFinder from "./SafeHospitalFinder";
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState("maps");
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem("activeTab") || "maps");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  const switchTab = (tab) => {
+    localStorage.setItem("activeTab", tab);
+    setActiveTab(tab);
+  };
     const [username, setUsername] = useState("");
   const navigation = useNavigate();
 
@@ -135,8 +140,8 @@ export default function Dashboard() {
       icon: <Route className="w-5 h-5" />,
       dropdown: true, // enables dropdown toggle
       submenu: [
-        { id: "hospital", label: "Hospitals" ,icon: <Route className="w-5 h-5" />},
-        { id: "shelter", label: "Shelters" ,icon: <Route className="w-5 h-5" />}
+        { id: "hospital", label: "Hospitals", icon: <Building2 className="w-5 h-5" /> },
+        { id: "shelter", label: "Shelters",   icon: <Home className="w-5 h-5" /> }
       ]
     },
 
@@ -149,9 +154,6 @@ export default function Dashboard() {
     navigation("/login");
   };
 
-  const handleEditProfile = () => {
-    alert("Redirecting to Edit Profile page...");
-  };
 
   return (
     <div className="dashboard">
@@ -172,7 +174,7 @@ export default function Dashboard() {
       setShowDropdown(!showDropdown);
     } else {
       // Normal navigation
-      setActiveTab(item.id);
+      switchTab(item.id);
     }
   }}
   className={activeTab === item.id ? "active" : ""}
@@ -187,10 +189,11 @@ export default function Dashboard() {
                   {item.submenu.map((sub) => (
                     <button
                       key={sub.id}
-                      onClick={() => setActiveTab(sub.id)}
-                      className="submenu-item"
+                      onClick={() => switchTab(sub.id)}
+                      className={`submenu-item${activeTab === sub.id ? " active" : ""}`}
                     >
-                      {sub.label}
+                      {sub.icon}
+                      <span>{sub.label}</span>
                     </button>
                   ))}
                 </div>
@@ -210,9 +213,6 @@ export default function Dashboard() {
 
           {showProfileMenu && (
             <div className="profile-menu">
-              <button onClick={handleEditProfile}>
-                <User className="w-4 h-4" /> Edit Profile
-              </button>
               <button onClick={handleLogout}>
                 <LogOut className="w-4 h-4" /> Logout
               </button>

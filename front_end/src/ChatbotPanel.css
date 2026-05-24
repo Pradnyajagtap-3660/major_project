@@ -179,3 +179,22 @@
   background: #94a3b8;
   cursor: not-allowed;
 }
+
+.route-link-btn {
+  display: block;
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.route-link-btn:hover {
+  background: #1558b0;
+}
+

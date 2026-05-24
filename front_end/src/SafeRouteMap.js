@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 
 export default function SafeRouteMap() {
   const { state } = useLocation();
-  const { userLocation, shelter } = state;
+  const userLocation = state?.userLocation;
+  const shelter = state?.shelter;
 
   const [routes, setRoutes] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const hasFetchedRef = useRef(false);
 
   const shelterIcon = new L.Icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/252/252025.png",
@@ -23,11 +25,19 @@ export default function SafeRouteMap() {
   });
 
   useEffect(() => {
+    if (!userLocation || !shelter) {
+      setError("Missing route details. Please search again.");
+      setLoading(false);
+      return;
+    }
+
+    // Prevent duplicate request in React StrictMode dev double-effect runs.
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     async function fetchRoutes() {
       try {
-
-        console.log("🗺️ Requesting route from:", userLocation, "to:", shelter);
-const response = await fetch("http://localhost:5001/api/safe-route",  {
+        const response = await fetch("http://localhost:5001/api/safe-route",  {
 
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -54,7 +64,15 @@ const response = await fetch("http://localhost:5001/api/safe-route",  {
     }
 
     fetchRoutes();
-  }, []);
+  }, [userLocation, shelter]);
+
+  if (!userLocation || !shelter) {
+    return (
+      <div style={{ padding: "20px", textAlign: "center", color: "#b91c1c" }}>
+        ⚠️ Missing route details. Go back and pick a destination again.
+      </div>
+    );
+  }
 
   const getRiskBgColor = (type) => {
     if (type === 'safe') return '#dcfce7';
@@ -172,7 +190,7 @@ const response = await fetch("http://localhost:5001/api/safe-route",  {
           zoom={14}
           style={{ height: "100%", width: "100%" }}
         >
-          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
           {/* User Marker */}
           <Marker position={[userLocation.lat, userLocation.lon]} icon={userIcon}>
@@ -207,7 +225,7 @@ const response = await fetch("http://localhost:5001/api/safe-route",  {
       </div>
 
       {/* Bottom Info Bar for selected route */}
-      {selectedRoute && routes.length > 0 && (() => {
+      {selectedRoute !== null && routes.length > 0 && (() => {
         const route = routes[selectedRoute];
         if (!route) return null;
         return (

@@ -63,6 +63,44 @@
   font-weight: 500;
 }
 
+/* Submenu items — indented under Safe Route Finder */
+.submenu {
+  margin-left: 16px;
+  border-left: 2px solid #c7d7f5;
+  padding-left: 4px;
+}
+
+.submenu-item {
+  padding: 7px 10px 7px 14px !important;
+  font-size: 13px !important;
+  color: #4b5563 !important;
+  background: transparent !important;
+  border-radius: 6px !important;
+}
+
+.submenu-item svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0;
+}
+
+.submenu-item span {
+  margin-left: 10px !important;
+  font-weight: 400 !important;
+}
+
+.submenu-item:hover {
+  background: #e0ecff !important;
+  color: #2563eb !important;
+}
+
+.submenu-item.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
 /* Sidebar Footer */
 .sidebar footer {
   padding: 15px;
