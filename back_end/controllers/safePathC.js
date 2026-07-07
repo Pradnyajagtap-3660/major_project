@@ -22,8 +22,8 @@ exports.getsafePath = async (req, res) => {
       return res.status(400).json({ error: "Invalid coordinates" });
     }
 
-    // Main routing query using pgr_dijkstra with safety-first cost calculation
-    // Using Dijkstra instead of A* for better handling of disconnected graphs
+    // Main routing query using pgr_aStar with safety-first cost calculation
+    // A* uses x1,y1,x2,y2 coordinates as heuristic to guide search toward destination
     const result = await pool.query(
       `
       WITH
@@ -57,8 +57,8 @@ exports.getsafePath = async (req, res) => {
           e.node_id as end_node
         FROM start_nodes s
         CROSS JOIN end_nodes e
-        CROSS JOIN LATERAL pgr_dijkstra(
-          -- Dynamic cost calculation based on flood risk
+        CROSS JOIN LATERAL pgr_aStar(
+          -- A* requires x1,y1 (start point) and x2,y2 (end point) for heuristic
           'SELECT
             id,
             source,
@@ -88,12 +88,18 @@ exports.getsafePath = async (req, res) => {
                WHEN ''High Risk'' THEN ST_Length(geom::geography) * 20
                WHEN ''Medium Risk'' THEN ST_Length(geom::geography) * 5
                ELSE 0
-             END) AS reverse_cost
+             END) AS reverse_cost,
+            -- Coordinates of road segment start and end points for A* heuristic
+            ST_X(ST_StartPoint(ST_GeometryN(geom, 1))) AS x1,
+            ST_Y(ST_StartPoint(ST_GeometryN(geom, 1))) AS y1,
+            ST_X(ST_EndPoint(ST_GeometryN(geom, 1)))   AS x2,
+            ST_Y(ST_EndPoint(ST_GeometryN(geom, 1)))   AS y2
           FROM roads_in_risk
           WHERE source IS NOT NULL AND target IS NOT NULL',
           s.node_id,
           e.node_id,
-          directed := false
+          directed := false,
+          heuristic := 4
         ) AS route
         WHERE route.edge IS NOT NULL
         LIMIT 1
